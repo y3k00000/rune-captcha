@@ -1,0 +1,8 @@
+{
+  "name": "rune-captcha",
+  "version": "0.0.1",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
