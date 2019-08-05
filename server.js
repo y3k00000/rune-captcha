@@ -4,16 +4,30 @@ const fs = require("fs");
 const staticFolder = `${__dirname}/statics`;
 const serverPort = 8080;
 
-try{
-    try{
+const fontPath = `${__dirname}/fonts/rune.ttf`;
+const TextToSVG = require("text-to-svg");
+const textToSVG = TextToSVG.loadSync(fontPath);
+const svg = text => textToSVG.getSVG(text, {
+    x: 0,
+    y: 0,
+    fontSize: 72,
+    anchor: 'top',
+    attributes: {
+        fill: 'black',
+        stroke: 'black'
+    }
+});
+
+try {
+    try {
         fs.readFileSync(staticFolder);
         console.error(`${staticFolder} file exists, end program!!`);
         process.exit(-1);
-    } catch(e){
+    } catch (e) {
         // file conflicts with folder not exists, continue.
     }
     fs.readdirSync(staticFolder);
-}catch(e){
+} catch (e) {
     console.log(`creating static folder ${staticFolder}...`);
     fs.mkdirSync(staticFolder);
 }
@@ -35,10 +49,13 @@ server.get("/rune/:runeId", (req, res) => {
     if (!runeId) {
         res.status(404).send("");
     } else {
-
+        // test
+        console.log(runeId);
+        var svgData = svg(runeId);
+        res.status(200).send(svgData);
     }
 });
 
-server.listen(serverPort,()=>{
+server.listen(serverPort, () => {
     console.log(`Captcha Server listen on ${serverPort}`);
 });
