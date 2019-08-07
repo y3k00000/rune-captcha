@@ -104,11 +104,10 @@ const runes = [
     "ᛰ", //5872 16F0 RUNIC BELGTHOR SYMBOL
 ].map(text => { return { "text": text, "svg": svg(text) } });
 
-function randomIntegerBetween(start, end) {
-    return Math.floor((end - start + 1) * Math.random() + start);
-}
+const randomIntegerBetween = (start, end) => 
+    Math.floor((end - start + 1) * Math.random() + start);
 
-function newRunes() {
+const newRunes = () => {
     let runeSequence = [];
     for (let i = 0; i < runeSequenceLength; i++) {
         runeSequence.push(randomIntegerBetween(0, runes.length - 1));
