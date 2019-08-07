@@ -1,13 +1,15 @@
 const express = require("express");
 const fs = require("fs");
+const uuid = require('uuid/v1');
 
 const staticFolder = `${__dirname}/statics`;
 const serverPort = 8080;
+const runeSequenceLength = 6;
 
 const fontPath = `${__dirname}/fonts/FreeMono.otf`;
 const TextToSVG = require("text-to-svg");
 const textToSVG = TextToSVG.loadSync(fontPath);
-const svg = text => textToSVG.getSVG(text, {
+const svg = text => textToSVG.getSVG(Array.isArray(text) ? text.join("") : text, {
     x: 0,
     y: 0,
     fontSize: 72,
@@ -100,7 +102,20 @@ const runes = [
     "ᛮ", //5870 16EE RUNIC ARLAUG SYMBOL
     "ᛯ", //5871 16EF RUNIC TVIMADUR SYMBOL
     "ᛰ", //5872 16F0 RUNIC BELGTHOR SYMBOL
-];
+].map(text => { return { "text": text, "svg": svg(text) } });
+
+function randomIntegerBetween(start, end) {
+    return Math.floor((end - start + 1) * Math.random() + start);
+}
+
+function newRunes() {
+    let runeSequence = [];
+    for (let i = 0; i < runeSequenceLength; i++) {
+        runeSequence.push(randomIntegerBetween(0, runes.length - 1));
+    }
+    console.log("newRunes()", runeSequence);
+    return runeSequence;
+}
 
 try {
     try {
@@ -120,26 +135,44 @@ var server = express();
 
 server.use(express.static(staticFolder));
 
-server.get("/", (req, res) => {
+server.get("/", async (req, res) => {
     res.status(200).send("He110!!")
 });
 
-server.get("/request", (req, res) => {
-    // send a js file
+var sessions = new Map()
+
+server.get("/new", async (req, res) => {
+    let runes = newRunes();
+    let runesUUID = uuid();
+    sessions.set(runesUUID,runes);
+    res.status(200).send(runesUUID);
 });
 
-server.get("/rune/:runeId", (req, res) => {
-    let { runeId } = req.params;
-    if (!runeId) {
+server.get("/runes/:id", async (req,res)=>{
+    let {id} = req.params;
+    if(!(id&&sessions.has(id))){
         res.status(404).send("");
-    } else {
-        // test
-        console.log(runeId);
-        var svgData = svg(runeId);
-        res.status(200).send(svgData);
+    } else{
+        res.status(200).send(svg(sessions.get(id).map(i=>runes[i].text)));        
     }
 });
 
-server.listen(serverPort, () => {
+server.get("/images/:text", async (req, res) => {
+    let { text } = req.params;
+    if (!text) {
+        res.status(404).send("");
+    } else {
+        for(let i=0;i<runes.length;i++){
+            let rune = runes[i];
+            if(rune.text==text){
+                res.status(200).set("Content-Type","image/svg+xml").send(rune.svg);
+                return;
+            }
+        }
+        res.status(404).send("");
+    }
+});
+
+server.listen(serverPort, async () => {
     console.log(`Captcha Server listen on ${serverPort}`);
 });
